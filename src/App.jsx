@@ -1,67 +1,50 @@
 import React, { useState } from "react";
-import HexagramDisplay from "./components/Hexagramdisplay";
-import Interpretation from "./components/Interpretation";
+import hexagramText from "./hexagramText";
 
 const App = () => {
-  const [primaryHexagram, setPrimaryHexagram] = useState([]);
-  const [secondaryHexagram, setSecondaryHexagram] = useState([]);
-  const [changingLines, setChangingLines] = useState([]);
+  const [selectedHexagrams, setSelectedHexagrams] = useState(null);
 
-  const castHexagram = () => {
-    const primary = [];
-    const changes = [];
+  const generateHexagrams = () => {
+    // Generate primary hexagram
+    const hexagram = Array.from({ length: 6 }, () => Math.round(Math.random()));
+    
+    // Generate secondary hexagram by changing lines
+    const changingLines = hexagram.map((line) => (Math.random() < 0.5 ? 1 - line : line));
+    const primaryHexagram = hexagram.join("");
+    const secondaryHexagram = changingLines.join("");
 
-    for (let i = 0; i < 6; i++) {
-      const toss = Math.floor(Math.random() * 4); // Random 0-3
-      if (toss === 0) {
-        primary.push("yang");
-        changes.push(i); // Old yang changes to yin
-      } else if (toss === 1) {
-        primary.push("yang"); // Stable yang
-      } else if (toss === 2) {
-        primary.push("yin");
-        changes.push(i); // Old yin changes to yang
-      } else if (toss === 3) {
-        primary.push("yin"); // Stable yin
-      }
-    }
+    setSelectedHexagrams([primaryHexagram, secondaryHexagram]);
+  };
 
-    // Reverse for traditional display (top line is last in array)
-    const primaryReversed = [...primary].reverse();
+  const renderHexagram = (hexagram, label) => {
+    const hexData = hexagramText[hexagram];
+    if (!hexData) return <div>Invalid Hexagram</div>;
 
-    // Generate secondary hexagram by flipping lines at changing positions
-    const secondary = [...primary];
-    changes.forEach((index) => {
-      secondary[index] = secondary[index] === "yang" ? "yin" : "yang";
-    });
-    const secondaryReversed = [...secondary].reverse();
-
-    setPrimaryHexagram(primaryReversed);
-    setSecondaryHexagram(secondaryReversed);
-    setChangingLines(changes.reverse());
+    return (
+      <div style={{ marginBottom: "20px" }}>
+        <h2>{label}</h2>
+        <h3>{hexData.name}</h3>
+        <p><strong>Meaning:</strong> {hexData.meaning}</p>
+        <h4>Lines:</h4>
+        <ul>
+          {hexData.lines.map((line, index) => (
+            <li key={index}><strong>Line {index + 1}:</strong> {line}</li>
+          ))}
+        </ul>
+      </div>
+    );
   };
 
   return (
-    <div style={{ textAlign: "center", padding: "20px" }}>
+    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
       <h1>I Ching Reader</h1>
-      <p>The I Ching, also known as the Book of Changes, is one of the oldest and most influential texts in Chinese history, serving as both a divination tool and a philosophical guide. Originating over 3,000 years ago, it offers insights into the patterns of life and the dynamic interplay of forces in the universe. The text is built around 64 hexagrams, which are six-line symbols composed of broken (yin) and solid (yang) lines, each representing a specific situation, state of change, or principle. Through interpretation of these hexagrams, the I Ching provides wisdom on how to navigate challenges, embrace opportunities, and harmonize with the natural flow of life. Its teachings emphasize balance, adaptability, and interconnectedness, making it a timeless resource for reflection and decision-making.</p>
-      <button onClick={castHexagram}>Cast Hexagram</button>
-      {primaryHexagram.length > 0 && (
+      <button onClick={generateHexagrams} style={{ marginBottom: "20px", padding: "10px 15px", fontSize: "16px" }}>
+        Generate Hexagrams
+      </button>
+      {selectedHexagrams && (
         <>
-          <HexagramDisplay title="Primary Hexagram" hexagram={primaryHexagram} />
-          <Interpretation
-            hexagram={primaryHexagram}
-            changingLines={changingLines}
-          />
-          {secondaryHexagram.length > 0 && (
-            <>
-              <HexagramDisplay
-                title="Secondary Hexagram"
-                hexagram={secondaryHexagram}
-              />
-              <Interpretation hexagram={secondaryHexagram} changingLines={[]} />
-            </>
-          )}
+          {renderHexagram(selectedHexagrams[0], "Current Situation (Primary Hexagram)")}
+          {renderHexagram(selectedHexagrams[1], "Future Situation (Secondary Hexagram)")}
         </>
       )}
     </div>
